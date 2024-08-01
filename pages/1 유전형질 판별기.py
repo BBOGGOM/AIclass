@@ -1,22 +1,12 @@
 import textwrap
 import google.generativeai as genai
 import streamlit as st
-import pathlib
-import toml
 
 def to_markdown(text):
     text = text.replace('•', '*')
     return textwrap.indent(text, '> ', predicate=lambda _: True)
 
-# secrets.toml 파일 경로
-secrets_path = pathlib.Path(__file__).parent.parent / ".streamlit/secrets.toml"
-
-# secrets.toml 파일 읽기
-with open(secrets_path, "r") as f:
-    secrets = toml.load(f)
-
-# secrets.toml 파일에서 API 키 값 가져오기
-api_key = secrets.get("api_key")
+api_key = "AIzaSyBL61qYRwNy2CBHxjy73AiRw8iD8MeAp80"
 
 def try_generate_content(api_key, prompt):
     genai.configure(api_key=api_key)
