@@ -18,16 +18,16 @@ with open(secrets_path, "r") as f:
 # secrets.toml 파일에서 API 키 값 가져오기
 api_key = secrets.get("api_key")
 
-def try_generate_content(api_key, prompt):
+# few-shot 프롬프트 구성 함수 수정
+def generate_science_competition_info(api_key, competition_name):
     genai.configure(api_key=api_key)
-   
     model = genai.GenerativeModel(
-        model_name="gemini-1.0-pro",
+        model_name="gemini-1.5-flash",
         generation_config={
-            "temperature": 0.9,
-            "top_p": 1,
-            "top_k": 1,
-            "max_output_tokens": 2048,
+            "temperature": 0.7,
+            "top_p": 0.9,
+            "top_k": 40,
+            "max_output_tokens": 256,
         },
         safety_settings=[
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
@@ -36,6 +36,14 @@ def try_generate_content(api_key, prompt):
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
         ]
     )
+    prompt = f"""
+    다음 과학 대회에 대한 안내문을 작성해줘.
+    학기초에 학생들이 참가할 수 있도록, 대회 목적, 참가 방법, 일정 등의 정보를 간략하게 포함해야 해.
+
+    대회 이름: {competition_name}
+
+    안내문:
+    """
     try:
         response = model.generate_content(prompt)
         return response.text
@@ -43,33 +51,18 @@ def try_generate_content(api_key, prompt):
         print(f"API 호출 실패: {e}")
         return None
 
-st.title("유전 형질 판별기 🧬")
+# 스트림릿 앱 인터페이스 구성
+st.title("교내 과학 대회 안내")
 
-st.markdown(
-    """
-    유전 형질을 입력하면 그것이 우성 형질인지 열성 형질인지 알려주는 웹앱입니다.
-    예시: 눈 색깔, 머리 색깔, 혈액형, 곱슬머리, 귀 모양, 왼손잡이, 코 모양
-    """
-)
+# 사용자 입력 받기
+competition_name = st.selectbox("대회를 선택하세요.", ["학생과학발명품경진대회", "청소년과학페어", "과학전람회"])
 
-example_traits = [
-    "눈 색깔", "머리 색깔", "혈액형", "곱슬머리", "귀 모양", 
-    "왼손잡이", "코 모양", "보조개", "주근깨", "치아 모양", 
-    "쌍꺼풀", "귓볼 모양", "턱 모양", "피부 색깔", "체모 밀도",
-    "알러지 반응", "혀말기", "안면형태", "손가락 길이", "발 모양"
-]
-trait = st.selectbox("유전 형질을 선택하세요 또는 직접 입력하세요:", example_traits + ["직접 입력"])
+if st.button("안내"):
+    # API 키로 안내문 생성 시도
+    competition_info = generate_science_competition_info(api_key, competition_name)
 
-if trait == "직접 입력":
-    trait = st.text_input("유전 형질을 입력하세요:")
-
-if st.button("확인"):
-    if trait:
-        prompt = f"유전 형질 '{trait}'가 우성 형질인지 열성 형질인지 설명해주세요."
-        result = try_generate_content(api_key, prompt)
-        if result:
-            st.markdown(to_markdown(result))
-        else:
-            st.error("정보를 가져오는 데 실패했습니다. 나중에 다시 시도해주세요.")
+    # 결과 출력
+    if competition_info is not None:
+        st.markdown(to_markdown(competition_info))
     else:
-        st.warning("유전 형질을 입력하세요.")
+        st.error("API 호출에 실패했습니다. 나중에 다시 시도해주세요.")
