@@ -73,3 +73,6 @@ if st.button("확인"):
             st.error("정보를 가져오는 데 실패했습니다. 나중에 다시 시도해주세요.")
     else:
         st.warning("유전 형질을 입력하세요.")
+
+
+st.markdown('제작자: BBOGGOM')
